@@ -19,7 +19,7 @@ from tqdm import tqdm
 
 pd.set_option('display.max_colwidth', 200)
 #%matplotlib inline
-df = pd.read_csv("dhoni.csv")
+df = pd.read_csv("wikipediaSentence.csv")
 #df.shape
 #print(df['sentence'].sample(5))
 entityPairs = []

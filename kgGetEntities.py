@@ -13,7 +13,7 @@ def getEntities(sent):
 
   
   for tok in nlp(sent):
-    ## chunk 2
+    ## 1
     # if token is a punctuation mark then move on to the next token
     if tok.dep_ != "punct":
       # check: token is a compound word or not
@@ -30,22 +30,18 @@ def getEntities(sent):
         if prv_tok_dep == "compound":
           modifier = prv_tok_text + " "+ tok.text
       
-      ## chunk 3
+#3
       if tok.dep_.find("subj") == True:
         ent1 = modifier +" "+ prefix + " "+ tok.text
         prefix = ""
         modifier = ""
         prv_tok_dep = ""
         prv_tok_text = ""      
-
-      ## chunk 4
+#4
       if tok.dep_.find("obj") == True:
         ent2 = modifier +" "+ prefix +" "+ tok.text
         
-      ## chunk 5  
-      # update variables
       prv_tok_dep = tok.dep_
       prv_tok_text = tok.text
-  #############################################################
 
   return [ent1.strip(), ent2.strip()]
