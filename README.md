@@ -1,5 +1,12 @@
 # NGB Living ChatBot
 
+![NGB Chatbot - first prototype](ngb_chatbot.png)
+
+First Prototype:
+
+> Code: [ngb_chatbot.py](https://github.com/LateNight01s/ngbliving_chatbot/blob/master/nbg_chatbot.py) \
+> Date: 13/07/2020
+
 ## About ChatBots
 
 ### Types
