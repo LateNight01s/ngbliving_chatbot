@@ -1,25 +1,43 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import './App.css'
 import { Widget, addResponseMessage, addLinkSnippet } from 'react-chat-widget'
 
 import 'react-chat-widget/lib/styles.css'
+import logo from './ngb-living-logo.png'
 
 function App() {
-	const [count, setCount] = useState(1)
 	const link = {
 		title: 'Project Repository',
 		link: 'https://github.com/LateNight01s/ngbliving_chatbot',
 		target: '_blank',
 	}
 
-	function handleNewUserMessage(message) {
-		setCount(count + 1)
-		console.log(message)
-		addResponseMessage(`Message count: ${count}`)
+	async function postData(url = '', payload = {}) {
+		const response = await fetch(url, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(payload),
+		})
+		return response
+	}
 
-		if (message.includes('Project') || message.includes('project')) {
+	async function handleNewUserMessage(msg) {
+    const newMsg = { message: msg }
+		await postData('http://127.0.0.1:8080/', newMsg)
+			.then((response) => response.text())
+			.then((response) => {
+				addResponseMessage(response)
+				console.log(response)
+			})
+			.catch((error) => {
+				console.log(error)
+			})
+
+		if (msg.includes('Project') || msg.includes('project')) {
 			addLinkSnippet(link)
-		} else if (message.includes('image')) {
+		} else if (msg.includes('image')) {
 			addResponseMessage('![prototype](https://i.imgur.com/10C1C9o.png)')
 		}
 	}
@@ -37,6 +55,7 @@ function App() {
 			<Widget
 				title='NGB Living ChatBot'
 				subtitle='First prototype'
+				profileAvatar={logo}
 				handleNewUserMessage={handleNewUserMessage}
 			/>
 		</div>

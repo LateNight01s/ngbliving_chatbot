@@ -19,7 +19,7 @@ sent_vec = ''
 
 
 def to_lower(corpus):
-    for i, doc enumerate(corpus):
+    for i,doc in enumerate(corpus):
         corpus[i] = doc.lower()
 
     return corpus
