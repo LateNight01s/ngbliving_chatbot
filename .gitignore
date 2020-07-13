@@ -4,3 +4,4 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+./backend/en_core_web_lg-2.3.1/
