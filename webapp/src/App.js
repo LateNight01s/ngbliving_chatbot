@@ -25,7 +25,7 @@ function App() {
 
 	async function handleNewUserMessage(msg) {
     const newMsg = { message: msg }
-		await postData('http://127.0.0.1:8080/', newMsg)
+    await postData('http://localhost:8080', newMsg)
 			.then((response) => response.text())
 			.then((response) => {
 				addResponseMessage(response)
