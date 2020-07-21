@@ -1,12 +1,11 @@
 # NGB Living ChatBot
 
-![NGB ChatBot - first prototype](ngb_chatbot.png)
 ![NGB ChatBot - webapp](ngbchatbot_webapp.png)
 
-First Prototype:
+Prototype:
 
 > Code: [ngb_chatbot.py](https://github.com/LateNight01s/ngbliving_chatbot/blob/master/backend/ngb_chatbot.py) \
-> Date: 13/07/2020
+> Demo: [Video](https://drive.google.com/file/d/1X8lLhdcT3eAisr41pLWjtezHoYvEkabU/view?usp=sharing)
 
 ## About ChatBots
 
@@ -73,8 +72,17 @@ Word embedding is the collective name for a set of language modeling and feature
 
 ![Word Embedding Example](https://s3-ap-south-1.amazonaws.com/av-blog-media/wp-content/uploads/2017/06/06062705/Word-Vectors.png)
 
+## SentenceBERT
+
+Sentence-BERT, presented in [Reimers & Gurevych, 2019](https://arxiv.org/pdf/1908.10084.pdf) aims to adapt the BERT architecture by using siamese and triplet network structures to derive semantically meaningful sentence embeddings that can be compared using cosine-similarity.
+
+![The SBERT architecture in training on a classification objective (left) and inference (right)](https://miro.medium.com/max/700/1*S5lqDyY3Gl8OBJXFg1j4kQ.png)
+
 ### References
 
 - [Production Ready Chatbots: Generate if not Retrieve](https://arxiv.org/pdf/1711.09684.pdf)
+- [Document Embedding Techniques
+  ](https://towardsdatascience.com/document-embedding-techniques-fed3e7a6a25d)
+- [SentenceBERT](https://arxiv.org/pdf/1908.10084.pdf)
 - [Building a Knowledge Graph-based Dialogue System at the 2nd ConvAI Summer School](https://medium.com/deeppavlov/building-a-knowledge-graph-based-dialogue-system-at-the-2nd-convai-summer-school-ec2d0aa060e5)
 - [Document Similarity in Information Retrieval](https://courses.cs.washington.edu/courses/cse573/12sp/lectures/17-ir.pdf)
