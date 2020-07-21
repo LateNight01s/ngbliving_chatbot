@@ -3,6 +3,7 @@ pandas==1.0.5
 nltk==3.5
 Flask==1.1.2
 Flask-Cors==3.0.8
+sentence-transformers==0.3.0
 spacy==2.3.1
 gunicorn==20.0.4
 

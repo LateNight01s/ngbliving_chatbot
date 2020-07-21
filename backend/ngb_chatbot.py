@@ -6,85 +6,66 @@ from collections import Counter
 import tarfile
 import nltk
 import spacy
-# import wmd
+from sentence_transformers import SentenceTransformer
 
 nlp = ''
+model = ''
 stop_words = ''
-df_numpy = ''
+df_data = ''
+sent_emb = ''
+responses_np = ''
 pdata = ''
-DF = ''
-vocab = ''
-tf_idf = ''
-sent_vec = ''
+# DF = ''
+# vocab = ''
+# tf_idf = ''
+# sent_vec = ''
 
 
 def to_lower(corpus):
     for i,doc in enumerate(corpus):
-        corpus[i] = doc.lower()
+        corpus[i][1] = (doc[1]).lower()
 
     return corpus
 
 def remove_stopwords(corpus):
     for i,doc in enumerate(corpus) :
         text = ''
-        for token in nlp(doc):
+        for token in nlp(doc[1]):
             word = token.text
             if word not in stop_words and len(word)>1:
                 text = text + ' ' + word
-        corpus[i] = text.strip()
+        corpus[i][1] = text.strip()
 
     return corpus
 
 def remove_punctuations(corpus):
-    # symbols = "!\"#$%&()*+-./:;,<=>?@[\]^_`{|}~\n"
-    # table = str.maketrans('', '', symbols)
-    for i, doc in enumerate(corpus):
-        sent = doc
+    for i,doc in enumerate(corpus):
+        sent = doc[1]
         sent = re.sub(r'[^\w\s]', ' ', sent)
         sent = re.sub('\s*\\n+', ' ', sent)
         sent = re.sub('ngb\s*living', 'ngbliving', sent)
-        corpus[i] = sent.strip()
-        # corpus[i] = doc.translate(table)
+        corpus[i][1] = sent.strip()
 
     return corpus
 
 def lemmatize(corpus):
-    for i, doc in enumerate(corpus):
-        tokens = nlp(doc)
+    for i,doc in enumerate(corpus):
+        tokens = nlp(doc[1])
         text = ''
         for token in tokens:
             if (token.text).isspace() or len(token.text)<3: continue
             text += token.lemma_ + ' '
-        corpus[i] = text.strip()
+        corpus[i][1] = text.strip()
 
     return corpus
 
 def preprocess(corpus):
     corpus = to_lower(corpus)
-    corpus = remove_stopwords(corpus)
+    # corpus = remove_stopwords(corpus)
     corpus = remove_punctuations(corpus)
     corpus = lemmatize(corpus)
 
     return corpus
-
-def get_vocab(data):
-    wc = {}
-    for doc in data:
-        for token in nlp(doc):
-            word = token.text
-            try: wc[word] += 1
-            except: wc[word] = 1
-
-    return wc
-
-def get_oov(data, wc):
-    oov = {}
-    for doc in data:
-        for token in nlp(doc):
-            if not token.has_vector and token.text not in oov:
-                oov[token.text] =  wc[token.text]
-
-    return oov
 
 def build_df(docs):
     DF = {}
@@ -177,12 +158,12 @@ def get_query_vector(pquery):
 
     return q_vector
 
-def get_top_responses(q_vector, k=5):
+def get_top_responses(sent_emb, q_vector, k=5):
     if k > len(pdata): k = len(pdata)
     scores = []
-    for i, d_vec in enumerate(sent_vec):
-        cos_score = cosine_sim(q_vector, d_vec)
-        scores.append((cos_score, i))
+    for i, d_vec in enumerate(sent_emb):
+        cos_score = cosine_sim(q_vector, d_vec[1][0])
+        scores.append((cos_score, d_vec[0]))
 
     try:
         scores.sort(reverse=True)
@@ -192,49 +173,54 @@ def get_top_responses(q_vector, k=5):
     return [scores[i] for i in range(k)]
 
 def handle_query(query):
-    pquery = preprocess([''.join(query)])
-    # print('pquery:', pquery)
-    q_tfidf = get_query_tfidf(pquery)
-    q_vector = getWeightedVec(sent=pquery[0], i=0, tfidf=q_tfidf, q=True)
-    responses = get_top_responses(q_vector)
+    pquery = [[-1, ''.join(query)]]
+    pquery = preprocess(pquery)
+    # print('pquery:', pquery[0][1])
+    # q_tfidf = get_query_tfidf(pquery)
+    # q_vector = getWeightedVec(sent=pquery[0], i=0, tfidf=q_tfidf, q=True)
+    q_vector = model.encode([pquery[0][1]])
+    responses = get_top_responses(sent_emb, q_vector[0])
     if responses is None:
         print('Sorry! I could not resolve that query, try again.')
         return None, None
     top_doc_id = responses[0][1]
 
-    return responses, df_numpy[top_doc_id][0]
+    return responses, responses_np[top_doc_id]
 
 def main(query=''):
-    global nlp
+    global nlp, model
     global stop_words
-    global df_numpy
+    global df_data
+    global sent_emb, responses_np
     global pdata
-    global DF, vocab, tf_idf
-    global sent_vec
+    # global DF, vocab, tf_idf
+    # global sent_vec
 
-    nlp = spacy.load('./en_core_web_lg-2.3.1')
-    # nlp.add_pipe(wmd.WMD.SpacySimilarityHook(nlp), last=True)
+    nlp = spacy.load('./en_core_web_md-2.3.1')
+    model = SentenceTransformer('bert-base-nli-stsb-mean-tokens')
     stop_words = nlp.Defaults.stop_words
 
-    df = pd.read_csv(f'./ngb_data.csv', encoding='utf8')
+    df_data = pd.read_csv(f'./ngb_data.csv', encoding='utf8')
+    sent_emb = np.load(f'./sent_emb.npy', allow_pickle=True)
+    ques = df_data['Questions'].to_numpy()
+    responses_np = df_data['Responses'].to_numpy()
 
-    df_numpy = df.to_numpy()
-    data = [unicodedata.normalize("NFKD", str(doc[0]).lower()) for doc in df_numpy]
+    data = [unicodedata.normalize("NFKD", doc.lower()) for doc in ques]
+    ques_map = []
+    for i,ques in enumerate(data):
+        for q in ques.split('\n'):
+            if not len(q): continue
+            ques_map.append([i, q])
 
-    pdata = data[:]
-    pdata = preprocess(pdata)
+    pdata = ques_map[:]
+    # pdata = preprocess(pdata)
 
-    # wc = get_vocab(pdata)
-    # oov = get_oov(pdata, wc)
-    # wc_top = sorted(wc.items(), key=lambda x: x[1])[::-1]
-    # oov_top = sorted(oov.items(), key=lambda x: x[1])[::-1]
+    # docs = [[token.text for token in nlp(doc) if not (token.text).isspace()] for doc in pdata]
 
-    docs = [[token.text for token in nlp(doc) if not (token.text).isspace()] for doc in pdata]
+    # DF, vocab = build_df(docs)
+    # tf_idf = build_tfidf(docs)
 
-    DF, vocab = build_df(docs)
-    tf_idf = build_tfidf(docs)
-
-    sent_vec = getSentVectors(pdata)
+    # sent_vec = getSentVectors(pdata)
 
     if __name__=='__main__':
         while (1):

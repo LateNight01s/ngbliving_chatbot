@@ -54,7 +54,7 @@ function App() {
 			</header>
 			<Widget
 				title='NGB Living ChatBot'
-				subtitle='First prototype'
+				subtitle='Second prototype'
 				profileAvatar={logo}
 				handleNewUserMessage={handleNewUserMessage}
 			/>
