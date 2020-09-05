@@ -4,4 +4,4 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-ngb_data.csv
+# ngb_data.csv

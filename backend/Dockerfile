@@ -7,4 +7,5 @@ RUN pip install --no-cache-dir -r requirements.txt &&\
     model = SentenceTransformer('bert-base-nli-stsb-mean-tokens')"
 COPY . .
 ENV PORT=8080
-CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 main:app
+# CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 main:app
+CMD exec gunicorn -b localhost:8080 -k flask_sockets.worker main:app

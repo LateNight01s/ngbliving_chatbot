@@ -14,7 +14,7 @@ stop_words = ''
 df_data = ''
 sent_emb = ''
 responses_np = ''
-pdata = ''
+# pdata = ''
 # DF = ''
 # vocab = ''
 # tf_idf = ''
@@ -136,7 +136,7 @@ def cosine_sim(a, b):
     return cos_sim
 
 def get_query_tfidf(pquery):
-    N = len(pdata)
+    N = len(sent_emb)
     tokens = [token.text for token in nlp(pquery[0]) if not (token.text).isspace()]
     counter = Counter(tokens)
     for term in set(tokens):
@@ -159,7 +159,7 @@ def get_query_vector(pquery):
     return q_vector
 
 def get_top_responses(sent_emb, q_vector, k=5):
-    if k > len(pdata): k = len(pdata)
+    if k > len(sent_emb): k = len(sent_emb)
     scores = []
     for i, d_vec in enumerate(sent_emb):
         cos_score = cosine_sim(q_vector, d_vec[1][0])
@@ -187,39 +187,42 @@ def handle_query(query):
 
     return responses, responses_np[top_doc_id]
 
-def main(query=''):
+def main(spacyModel, bertTokens, data, sentEmb, query=''):
     global nlp, model
     global stop_words
     global df_data
     global sent_emb, responses_np
-    global pdata
+    # global pdata
     # global DF, vocab, tf_idf
     # global sent_vec
 
-    nlp = spacy.load('./en_core_web_md-2.3.1')
-    model = SentenceTransformer('bert-base-nli-stsb-mean-tokens')
+
+    nlp = spacyModel
+    # nlp = spacy.load('./en_core_web_md-2.3.1')
+    model = bertTokens
+    # model = SentenceTransformer('bert-base-nli-stsb-mean-tokens')
     stop_words = nlp.Defaults.stop_words
 
-    df_data = pd.read_csv(f'./ngb_data.csv', encoding='utf8')
-    sent_emb = np.load(f'./sent_emb.npy', allow_pickle=True)
-    ques = df_data['Questions'].to_numpy()
+    df_data = data
+    # df_data = pd.read_csv(f'./ngb_data.csv', encoding='utf8')
+    sent_emb = sentEmb
+    # sent_emb = np.load(f'./sent_emb.npy', allow_pickle=True)
+    # ques = df_data['Questions'].to_numpy()
     responses_np = df_data['Responses'].to_numpy()
 
-    data = [unicodedata.normalize("NFKD", doc.lower()) for doc in ques]
-    ques_map = []
-    for i,ques in enumerate(data):
-        for q in ques.split('\n'):
-            if not len(q): continue
-            ques_map.append([i, q])
+    # data = [unicodedata.normalize("NFKD", doc.lower()) for doc in ques]
+    # ques_map = []
+    # for i,ques in enumerate(data):
+    #     for q in ques.split('\n'):
+    #         if not len(q): continue
+    #         ques_map.append([i, q])
 
-    pdata = ques_map[:]
+    # pdata = ques_map[:]
+
     # pdata = preprocess(pdata)
-
     # docs = [[token.text for token in nlp(doc) if not (token.text).isspace()] for doc in pdata]
-
     # DF, vocab = build_df(docs)
     # tf_idf = build_tfidf(docs)
-
     # sent_vec = getSentVectors(pdata)
 
     if __name__=='__main__':
@@ -235,4 +238,9 @@ def main(query=''):
         return ans
 
 if __name__=='__main__':
-    main()
+    nlp = spacy.load('./en_core_web_md-2.3.1')
+    model = SentenceTransformer('bert-base-nli-stsb-mean-tokens')
+    df_data = pd.read_csv(f'./ngb_data.csv', encoding='utf8')
+    sent_emb = np.load(f'./sent_emb.npy', allow_pickle=True)
+
+    main(nlp, model, df_data, sent_emb)

@@ -7,6 +7,16 @@ Prototype:
 > Code: [ngb_chatbot.py](https://github.com/LateNight01s/ngbliving_chatbot/blob/master/backend/ngb_chatbot.py) \
 > Demo: [Video](https://drive.google.com/file/d/1X8lLhdcT3eAisr41pLWjtezHoYvEkabU/view?usp=sharing)
 
+Run locally:
+
+```
+git clone https://github.com/LateNight01s/ngbliving_chatbot
+cd ./ngbliving_chatbot
+docker build -t chatbot ./backend/
+docker run --rm -p 8080:8080 chatbot:latest
+Go to http://localhost:8080
+```
+
 ## About ChatBots
 
 ### Types
