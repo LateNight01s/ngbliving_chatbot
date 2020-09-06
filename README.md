@@ -13,7 +13,7 @@ Run locally:
 git clone https://github.com/LateNight01s/ngbliving_chatbot
 cd ./ngbliving_chatbot
 docker build -t chatbot ./backend/
-docker run --rm -p 8080:8080 chatbot:latest
+docker run --rm -p 8080:8000 chatbot:latest
 Go to http://localhost:8080
 ```
 
