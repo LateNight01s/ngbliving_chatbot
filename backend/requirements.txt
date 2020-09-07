@@ -4,6 +4,8 @@ nltk==3.5
 Flask==1.1.2
 Flask-Cors==3.0.8
 Flask-Sockets==0.2.1
+torch==1.5.1
+transformers==3.0.2
 sentence-transformers==0.3.0
 spacy==2.3.1
 gunicorn==20.0.4

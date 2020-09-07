@@ -3,6 +3,7 @@ from sentence_transformers import SentenceTransformer
 import spacy
 import numpy as np
 import pandas as pd
+import sys
 
 from flask import Flask, request, render_template
 from flask_cors import CORS, cross_origin
@@ -53,11 +54,17 @@ def chat(ws):
         message = ws.receive()
         if message is None:  # message is "None" if the client has closed.
             continue
-        response = main(nlp, model, df_data, sent_emb, message)
+
+        try:
+            response = main(nlp, model, df_data, sent_emb, message)
+        except Exception as err:
+            response = 'Server error'
+            print(err)
+            sys.stdout.flush()
         clients = ws.handler.server.clients.values()
         for client in clients:
             client.ws.send(response)
-            print('message sent to', client.address)
+            # print('message sent to', client.address)
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8080, debug=True)

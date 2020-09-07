@@ -175,7 +175,6 @@ def get_top_responses(sent_emb, q_vector, k=5):
 def handle_query(query):
     pquery = [[-1, ''.join(query)]]
     pquery = preprocess(pquery)
-    # print('pquery:', pquery[0][1])
     # q_tfidf = get_query_tfidf(pquery)
     # q_vector = getWeightedVec(sent=pquery[0], i=0, tfidf=q_tfidf, q=True)
     q_vector = model.encode([pquery[0][1]])
