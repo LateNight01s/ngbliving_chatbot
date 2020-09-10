@@ -6,7 +6,7 @@ from collections import Counter
 import tarfile
 import nltk
 import spacy
-from sentence_transformers import SentenceTransformer
+# from sentence_transformers import SentenceTransformer
 
 nlp = ''
 model = ''
@@ -91,14 +91,14 @@ def build_tfidf(docs):
             tf = counter[term]/len(doc)
             df = DF[term]
             idf = np.log(N/(df+1))
-            tf_idf[i, term] = tf * idf
+            tf_idf[term] = tf * idf
 
     return tf_idf
 
 def tfidf_vectorization():
     docs_vector = np.zeros((N, len(vocab)))
     for score in tf_idf:
-        idx = vocab.index(score[1])
+        idx = vocab.index(score)
         docs_vector[score[0]][idx] = tf_idf[score]
 
     return docs_vector
@@ -110,16 +110,18 @@ def getWeightedVec(sent, i=0, q=False, tfidf=0):
         if token.has_vector:
             term = token.text
             if len(term) < 3: continue
-            # if  q is False:
-            #     weight = tf_idf[i, term]
-            # else:
-            #     weight = tfidf
-            # weights.append(weight)
+            if  q is False:
+                weight = tf_idf[i, term]
+            else:
+                weight = tfidf[term]
+            weights.append(weight)
             vectors.append(token.vector)
 
-    # try: doc_vec = np.average(vectors, weights=weights, axis=0)
-    try: doc_vec = np.average(vectors, axis=0)
-    except: return doc.vector
+    try:
+        doc_vec = np.average(vectors, weights=weights, axis=0)
+        # doc_vec = np.average(vectors, axis=0)
+    except:
+        return doc.vector
 
     return doc_vec
 
@@ -137,15 +139,17 @@ def cosine_sim(a, b):
 
 def get_query_tfidf(pquery):
     N = len(sent_emb)
-    tokens = [token.text for token in nlp(pquery[0]) if not (token.text).isspace()]
+    tokens = [token.text for token in nlp(pquery) if not (token.text).isspace()]
     counter = Counter(tokens)
+    tf_idf = {}
     for term in set(tokens):
         tf = counter[term]/len(tokens)
         try: df = DF[term]
         except: df = 0
         idf = np.log((N+1)/(df + 1))
+        tf_idf[term] = tf * idf
 
-    return tf * idf
+    return tf_idf
 
 def get_query_vector(pquery):
     q_vector = np.zeros((len(vocab)))
@@ -161,13 +165,17 @@ def get_query_vector(pquery):
 def get_top_responses(sent_emb, q_vector, k=5):
     if k > len(sent_emb): k = len(sent_emb)
     scores = []
+
     for i, d_vec in enumerate(sent_emb):
-        cos_score = cosine_sim(q_vector, d_vec[1][0])
+        # cos_score = cosine_sim(q_vector, d_vec[1][0])
+        cos_score = cosine_sim(q_vector, d_vec[1])
         scores.append((cos_score, d_vec[0]))
+
 
     try:
         scores.sort(reverse=True)
-    except:
+    except Exception as err:
+        print(err)
         return None
 
     return [scores[i] for i in range(k)]
@@ -175,18 +183,20 @@ def get_top_responses(sent_emb, q_vector, k=5):
 def handle_query(query):
     pquery = [[-1, ''.join(query)]]
     pquery = preprocess(pquery)
-    # q_tfidf = get_query_tfidf(pquery)
-    # q_vector = getWeightedVec(sent=pquery[0], i=0, tfidf=q_tfidf, q=True)
-    q_vector = model.encode([pquery[0][1]])
-    responses = get_top_responses(sent_emb, q_vector[0])
+    q_tfidf = get_query_tfidf(pquery[0][1])
+    q_vector = getWeightedVec(sent=pquery[0][1], i=0, tfidf=q_tfidf, q=True)
+    # q_vector = model.encode([pquery[0][1]])
+    # responses = get_top_responses(sent_emb, q_vector[0])
+    responses = get_top_responses(sent_emb, q_vector)
     if responses is None:
         print('Sorry! I could not resolve that query, try again.')
         return None, None
     top_doc_id = responses[0][1]
+    top_conf = responses[0][0] * 100
 
-    return responses, responses_np[top_doc_id]
+    return responses, responses_np[top_doc_id], top_conf
 
-def main(spacyModel, bertTokens, data, sentEmb, query=''):
+def main(spacyModel, data, sentEmb, bertTokens=None, query=''):
     global nlp, model
     global stop_words
     global df_data
@@ -197,15 +207,10 @@ def main(spacyModel, bertTokens, data, sentEmb, query=''):
 
 
     nlp = spacyModel
-    # nlp = spacy.load('./en_core_web_md-2.3.1')
     model = bertTokens
-    # model = SentenceTransformer('bert-base-nli-stsb-mean-tokens')
     stop_words = nlp.Defaults.stop_words
-
     df_data = data
-    # df_data = pd.read_csv(f'./ngb_data.csv', encoding='utf8')
     sent_emb = sentEmb
-    # sent_emb = np.load(f'./sent_emb.npy', allow_pickle=True)
     # ques = df_data['Questions'].to_numpy()
     responses_np = df_data['Responses'].to_numpy()
 
@@ -228,18 +233,23 @@ def main(spacyModel, bertTokens, data, sentEmb, query=''):
         while (1):
             print('Please input a query> ', end='')
             query = input()
-            responses, ans = handle_query(query)
+            responses, ans, conf = handle_query(query)
             if ans is None: continue
-            print(f'Answer> {ans}\n')
+            if(conf < 80.0):
+                ans = '''Sorry, I could not find any relevant information. Kindly contact our office or try again with a different query.'''
+            print(f'Answer> {ans} | conf: {conf}\n')
             # print(responses)
     else:
-        responses, ans = handle_query(query)
+        responses, ans, conf = handle_query(query)
+        if(conf < 80.0):
+            ans = '''Sorry, I could not find any relevant information. Kindly contact our office or try again with a different query.'''
         return ans
 
 if __name__=='__main__':
     nlp = spacy.load('./en_core_web_md-2.3.1')
-    model = SentenceTransformer('bert-base-nli-stsb-mean-tokens')
+    # model = SentenceTransformer('bert-base-nli-stsb-mean-tokens')
     df_data = pd.read_csv(f'./ngb_data.csv', encoding='utf8')
-    sent_emb = np.load(f'./sent_emb.npy', allow_pickle=True)
+    sent_emb = np.load(f'./sent_emb_gloveTFIDF.npy', allow_pickle=True)
+    # sent_emb = np.load(f'./sent_emb.npy', allow_pickle=True)
 
-    main(nlp, model, df_data, sent_emb)
+    main(nlp, df_data, sent_emb)
