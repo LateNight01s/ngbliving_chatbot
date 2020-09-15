@@ -196,7 +196,7 @@ def handle_query(query):
 
     return responses, responses_np[top_doc_id], top_conf
 
-def main(spacyModel, data, sentEmb, bertTokens=None, query=''):
+def main(spacyModel, data, sentEmb, query='', bertTokens=None):
     global nlp, model
     global stop_words
     global df_data
