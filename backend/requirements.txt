@@ -1,7 +1,7 @@
 numpy==1.19.0
 pandas==1.0.5
 nltk==3.5
-Flask==1.1.2
+Flask==2.1.0
 Flask-Cors==3.0.8
 Flask-Sockets==0.2.1
 spacy==2.3.1
